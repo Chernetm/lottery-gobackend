@@ -176,3 +176,36 @@ func (h *AdminHandler) DrawWinner(c *gin.Context) {
 		"winners": winner,
 	})
 }
+
+func (h *AdminHandler) GetAllUsers(c *gin.Context) {
+	users, err := h.adminService.GetAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
+func (h *AdminHandler) GiftFreeTicket(c *gin.Context) {
+	var input struct {
+		UserID    string `json:"userId" binding:"required"`
+		LotteryID uint   `json:"lotteryId" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	code, err := h.adminService.GiftFreeTicket(input.UserID, input.LotteryID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Free ticket gifted successfully",
+		"code":    code,
+	})
+}

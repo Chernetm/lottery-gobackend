@@ -34,6 +34,14 @@ func (r *AdminRepo) FindByEmail(email string) (*models.Admin, error) {
 	return &admin, nil
 }
 
+func (r *AdminRepo) FindByPhoneNumber(phone string) (*models.Admin, error) {
+	var admin models.Admin
+	if err := r.db.First(&admin, "phone_number = ?", phone).Error; err != nil {
+		return nil, err
+	}
+	return &admin, nil
+}
+
 func (r *AdminRepo) Update(admin *models.Admin) error {
 	return r.db.Save(admin).Error
 }

@@ -22,7 +22,7 @@ type Lottery struct {
 	MinTickets     int            `json:"minTickets"`
 	MaxTickets     *int           `json:"maxTickets"`
 	TotalTickets   int            `gorm:"default:0" json:"totalTickets"`
-	Status         LotteryStatus  `gorm:"type:enum('DRAFT','ACTIVE','LOCKED','DRAWN','CANCELLED','COMPLETED');default:'ACTIVE'" json:"status"`
+	Status         LotteryStatus  `gorm:"type:varchar(20);default:'ACTIVE'" json:"status"`
 	WinnerID       *string        `json:"winnerId"` // Legacy: First prize winner
 	DrawAt         *time.Time     `json:"drawAt"`
 	DrawnAt        *time.Time     `json:"drawnAt"`

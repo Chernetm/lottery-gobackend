@@ -27,13 +27,13 @@ func main() {
 	ticketRepo := repo.NewTicketRepo(db.DB)
 	withdrawalRepo := repo.NewWithdrawalRepo(db.DB)
 	paymentRepo := repo.NewPaymentRepo(db.DB)
-	//couponRepo := repo.NewCouponRepo(db.DB)
+	couponRepo := repo.NewCouponRepo(db.DB)
 
 	// Initialize Services
 	authService := services.NewAuthService(userRepo, adminRepo)
 	lotteryService := services.NewLotteryService(lotteryRepo, itemRepo)
-	ticketService := services.NewTicketService(ticketRepo, userRepo, lotteryRepo)
-	adminService := services.NewAdminService(itemRepo, lotteryRepo, userRepo, ticketRepo)
+	ticketService := services.NewTicketService(ticketRepo, userRepo, lotteryRepo, couponRepo)
+	adminService := services.NewAdminService(itemRepo, lotteryRepo, userRepo, ticketRepo, couponRepo)
 	withdrawalService := services.NewWithdrawalService(withdrawalRepo, userRepo)
 	paymentService := services.NewPaymentService(paymentRepo, userRepo, ticketRepo, lotteryRepo)
 

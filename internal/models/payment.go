@@ -20,7 +20,7 @@ type Payment struct {
 	Quantity       int           `json:"quantity"`
 	Amount         float64       `json:"amount"`
 	Currency       string        `gorm:"default:'ETB'" json:"currency"`
-	Status         PaymentStatus `gorm:"type:enum('PENDING','SUCCESS','FAILED');default:'PENDING'" json:"status"`
+	Status         PaymentStatus `gorm:"type:varchar(20);default:'PENDING'" json:"status"`
 	CheckoutURL    string        `json:"checkoutUrl"`
 	CreatedAt      time.Time     `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt      time.Time     `gorm:"autoUpdateTime" json:"updatedAt"`

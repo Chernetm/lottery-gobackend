@@ -34,8 +34,22 @@ func (r *UserRepo) FindByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *UserRepo) FindByPhoneNumber(phone string) (*models.User, error) {
+	var user models.User
+	if err := r.db.First(&user, "phone_number = ?", phone).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *UserRepo) Update(user *models.User) error {
 	return r.db.Save(user).Error
+}
+
+func (r *UserRepo) FindAll() ([]models.User, error) {
+	var users []models.User
+	err := r.db.Find(&users).Error
+	return users, err
 }
 
 func (r *UserRepo) GetTotalCount() (int64, error) {

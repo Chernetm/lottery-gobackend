@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"lottery-backend/internal/services"
+	"lottery-backend/internal/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,10 +18,10 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 
 func (h *AuthHandler) Register(c *gin.Context) {
 	var input struct {
-		Email       string `json:"email" binding:"required,email"`
-		Password    string `json:"password" binding:"required,min=6"`
-		PhoneNumber string `json:"phoneNumber" binding:"required"`
-		FullName    string `json:"fullName" binding:"required"`
+		Email       *string `json:"email" binding:"omitempty,email"`
+		Password    string  `json:"password" binding:"required,min=6"`
+		PhoneNumber string  `json:"phoneNumber" binding:"required"`
+		FullName    string  `json:"fullName" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -28,7 +29,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Register(input.Email, input.Password, input.PhoneNumber, input.FullName)
+	formattedPhone, err := utils.ValidateAndFormatPhoneNumber(input.PhoneNumber)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := h.authService.Register(input.Email, input.Password, formattedPhone, input.FullName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -39,7 +46,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 func (h *AuthHandler) Login(c *gin.Context) {
 	var input struct {
-		Email    string `json:"email" binding:"required,email"`
+		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
@@ -59,16 +66,23 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 func (h *AuthHandler) AdminRegister(c *gin.Context) {
 	var input struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required,min=6"`
-		FullName string `json:"fullName" binding:"required"`
+		Email       string `json:"email" binding:"required,email"`
+		Password    string `json:"password" binding:"required,min=6"`
+		PhoneNumber string `json:"phoneNumber" binding:"required"`
+		FullName    string `json:"fullName" binding:"required"`
 	}
 
 	if err := h.ShouldBindJSON(c, &input); err != nil {
 		return
 	}
 
-	admin, err := h.authService.AdminRegister(input.Email, input.Password, input.FullName)
+	formattedPhone, err := utils.ValidateAndFormatPhoneNumber(input.PhoneNumber)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	admin, err := h.authService.AdminRegister(input.Email, input.Password, input.FullName, formattedPhone)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -79,7 +93,7 @@ func (h *AuthHandler) AdminRegister(c *gin.Context) {
 
 func (h *AuthHandler) AdminLogin(c *gin.Context) {
 	var input struct {
-		Email    string `json:"email" binding:"required,email"`
+		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 

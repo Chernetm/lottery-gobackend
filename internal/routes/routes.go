@@ -79,6 +79,8 @@ func SetupRoutes(
 				admin.POST("/lotteries/:id/draw", adminH.DrawWinner)
 				admin.GET("/withdrawals", withdrawalH.GetAllWithdrawals)
 				admin.PATCH("/withdrawals/:id/status", withdrawalH.UpdateWithdrawalStatus)
+				admin.GET("/users", adminH.GetAllUsers)
+				admin.POST("/coupons/gift", adminH.GiftFreeTicket)
 			}
 
 			protected.POST("/lotteries", lotteryH.CreateLottery)

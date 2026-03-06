@@ -15,14 +15,16 @@ type AdminService struct {
 	lotteryRepo *repo.LotteryRepo
 	userRepo    *repo.UserRepo
 	ticketRepo  *repo.TicketRepo
+	couponRepo  *repo.CouponRepo
 }
 
-func NewAdminService(itemRepo *repo.ItemRepo, lotteryRepo *repo.LotteryRepo, userRepo *repo.UserRepo, ticketRepo *repo.TicketRepo) *AdminService {
+func NewAdminService(itemRepo *repo.ItemRepo, lotteryRepo *repo.LotteryRepo, userRepo *repo.UserRepo, ticketRepo *repo.TicketRepo, couponRepo *repo.CouponRepo) *AdminService {
 	return &AdminService{
 		itemRepo:    itemRepo,
 		lotteryRepo: lotteryRepo,
 		userRepo:    userRepo,
 		ticketRepo:  ticketRepo,
+		couponRepo:  couponRepo,
 	}
 }
 
@@ -198,4 +200,41 @@ func (s *AdminService) UpdateTicketStatus(ticketID uint, status models.TicketSta
 
 	ticket.Status = status
 	return s.ticketRepo.Update(ticket)
+}
+
+func (s *AdminService) GetAllUsers() ([]models.User, error) {
+	return s.userRepo.FindAll()
+}
+
+func (s *AdminService) GiftFreeTicket(userID string, lotteryID uint) (string, error) {
+	// Generate a secure random code
+	code := fmt.Sprintf("FREE-%s-%d", s.generateRandomString(6), time.Now().Unix()%1000)
+
+	expiresAt := time.Now().Add(time.Hour * 24 * 7) // 7 days expiration
+
+	coupon := &models.Coupon{
+		Code:      code,
+		Type:      models.CouponFreeTicket,
+		Value:     0,
+		UserID:    userID,
+		LotteryID: &lotteryID,
+		Status:    models.CouponActive,
+		ExpiresAt: &expiresAt,
+	}
+
+	if err := s.couponRepo.Create(coupon); err != nil {
+		return "", err
+	}
+
+	return code, nil
+}
+
+func (s *AdminService) generateRandomString(n int) string {
+	const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	ret := make([]byte, n)
+	for i := 0; i < n; i++ {
+		num, _ := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		ret[i] = letters[num.Int64()]
+	}
+	return string(ret)
 }

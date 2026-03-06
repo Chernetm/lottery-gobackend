@@ -24,7 +24,7 @@ func NewAuthService(userRepo *repo.UserRepo, adminRepo *repo.AdminRepo) *AuthSer
 	}
 }
 
-func (s *AuthService) Register(email, password, phoneNumber, fullName string) (*models.User, error) {
+func (s *AuthService) Register(email *string, password, phoneNumber, fullName string) (*models.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -47,8 +47,19 @@ func (s *AuthService) Register(email, password, phoneNumber, fullName string) (*
 	return user, nil
 }
 
-func (s *AuthService) Login(email, password string) (string, *models.User, error) {
-	user, err := s.userRepo.FindByEmail(email)
+func (s *AuthService) Login(identifier, password string) (string, *models.User, error) {
+	var user *models.User
+	var err error
+
+	// Check if identifier is phone number (starts with 0) or email
+	if len(identifier) > 0 && identifier[0] == '0' {
+		// Format phone number: replace 0 with 251
+		formattedPhone := "251" + identifier[1:]
+		user, err = s.userRepo.FindByPhoneNumber(formattedPhone)
+	} else {
+		user, err = s.userRepo.FindByEmail(identifier)
+	}
+
 	if err != nil {
 		return "", nil, errors.New("invalid credentials")
 	}
@@ -61,7 +72,7 @@ func (s *AuthService) Login(email, password string) (string, *models.User, error
 		"sub":  user.ID,
 		"type": "user",
 		"role": user.Role,
-		"exp":  time.Now().Add(time.Hour * 72).Unix(),
+		"exp":  time.Now().Add(time.Hour * 7).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(config.AppConfig.JWTSecret))
@@ -72,18 +83,19 @@ func (s *AuthService) Login(email, password string) (string, *models.User, error
 	return tokenString, user, nil
 }
 
-func (s *AuthService) AdminRegister(email, password, fullName string) (*models.Admin, error) {
+func (s *AuthService) AdminRegister(email, password, fullName, phoneNumber string) (*models.Admin, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
 	admin := &models.Admin{
-		Email:    email,
-		Password: string(hashedPassword),
-		FullName: fullName,
-		Role:     "ADMIN",
-		Status:   models.AdminStatusActive,
+		Email:       email,
+		Password:    string(hashedPassword),
+		FullName:    fullName,
+		PhoneNumber: phoneNumber,
+		Role:        "ADMIN",
+		Status:      models.AdminStatusActive,
 	}
 
 	if err := s.adminRepo.Create(admin); err != nil {
@@ -93,8 +105,19 @@ func (s *AuthService) AdminRegister(email, password, fullName string) (*models.A
 	return admin, nil
 }
 
-func (s *AuthService) AdminLogin(email, password string) (string, *models.Admin, error) {
-	admin, err := s.adminRepo.FindByEmail(email)
+func (s *AuthService) AdminLogin(identifier, password string) (string, *models.Admin, error) {
+	var admin *models.Admin
+	var err error
+
+	// Check if identifier is phone number (starts with 0) or email
+	if len(identifier) > 0 && identifier[0] == '0' {
+		// Format phone number: replace 0 with 251
+		formattedPhone := "251" + identifier[1:]
+		admin, err = s.adminRepo.FindByPhoneNumber(formattedPhone)
+	} else {
+		admin, err = s.adminRepo.FindByEmail(identifier)
+	}
+
 	if err != nil {
 		return "", nil, errors.New("invalid credentials")
 	}
@@ -107,7 +130,7 @@ func (s *AuthService) AdminLogin(email, password string) (string, *models.Admin,
 		"sub":  admin.ID,
 		"type": "admin",
 		"role": admin.Role,
-		"exp":  time.Now().Add(time.Hour * 72).Unix(),
+		"exp":  time.Now().Add(time.Hour * 7).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(config.AppConfig.JWTSecret))

@@ -73,10 +73,15 @@ func (s *PaymentService) InitializePayment(user *models.User, lottery *models.Lo
 		firstName = *user.FullName
 	}
 
+	email := ""
+	if user.Email != nil {
+		email = *user.Email
+	}
+
 	reqBody := ChapaInitRequest{
 		Amount:      lottery.TicketPrice * float64(quantity),
 		Currency:    "ETB",
-		Email:       user.Email,
+		Email:       email,
 		FirstName:   firstName,
 		LastName:    "Customer",
 		TxRef:       txRef,
